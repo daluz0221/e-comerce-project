@@ -56,23 +56,23 @@
       {% for product in products %}
         <div class="col-sm-6">
           <div class="card product">
-            <div class="">
-              <div class="-image">
+            <div class="item">
+              <div class="item-image">
                 <img src="{{ product.image.url }}" alt=""
                   class="img-fluid rounded-0">
               </div>
-              <div class="-text">
-                <!-- <div class="item-text-wrap">
+              <div class="item-text">
+                <div class="item-text-wrap">
                   <a href="{{ product.get_absolute_url }}" class="h2 text-white text-decoration-none">
                     <i class="fas fa-search-plus"></i>
                   </a>
-                </div> -->
+                </div>
               </div>
               <div class="card-body text-center">
-                <a href="{{ product.get_absolute_url }}" >
+            
                     {{ product.name }}
                     
-                  </a>
+                  
                 <hr>
                 <span>${{ product.price }}</span>
                 <div>
