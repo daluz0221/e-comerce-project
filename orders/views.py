@@ -3,10 +3,11 @@ from django.conf import settings
 import weasyprint
 from decimal import Decimal
 
-from django.contrib.admin.views.decorators import staff_member_required
+
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
+
 
 from cart.views import get_cart, cart_clear
 
@@ -33,6 +34,8 @@ def order_create(request):
                 transport_cost = 0
 
             order = order_form.save(commit=False)
+            if request.user.is_authenticated:
+                order.user = request.user
             order.transport_cost = Decimal(transport_cost)
             order.save()
 
@@ -58,6 +61,20 @@ def order_create(request):
     else:
         order_form = OrderCreateForm()
 
+        if request.user.is_authenticated:
+            initial_data = {
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+                'email': request.user.email,
+                'telephone': request.user.profile.phone_number,
+                'address': request.user.profile.address,
+                'postal_code': request.user.profile.postal_code,
+                'city': request.user.profile.city,
+                'country': request.user.profile.country,
+            }
+
+            order_form = OrderCreateForm(initial=initial_data)
+
     return render(request, 'order_create.html', {
         'cart':cart,
         'order_form':order_form,
@@ -65,16 +82,25 @@ def order_create(request):
     })
 
 
-@staff_member_required
+
 def invoice_pdf(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'filename:order_{order.id}.pdf'
+    response['Content-Disposition'] = f'filename=order_{order.id}.pdf'
 
-    #generate pdf
+    # generate pdf
     html = render_to_string('pdf.html', {'order': order})
-    stylesheet = [weasyprint.CSS(settings.STATIC_ROOT + 'css/pdf.css')]
-    weasyprint.HTML(string=html).write_pdf(response, stylesheets=stylesheet)
+    stylesheets=[weasyprint.CSS(settings.STATIC_ROOT + 'css/pdf.css')]
+    weasyprint.HTML(string=html).write_pdf(response,stylesheets=stylesheets)
 
     return response
+
+    
+def order_detail(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    return render(
+        request,
+        'order_detail.html',
+        {'order': order}
+    )

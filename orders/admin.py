@@ -4,6 +4,8 @@ import datetime
 
 from django.contrib import admin
 from django.http import HttpResponse
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import Order, OrderItem, Product
 from .task import status_chane_notification
@@ -109,11 +111,19 @@ def status_completed(modeladmin, request, queryset):
 status_completed.short_description = 'status_completed'
 
 
+def order_pdf(obj):
+    return format_html('PDF',
+        reverse('orders:invoice_pdf', args=[obj.id]))
+
+order_pdf.short_description = 'Invoice'
+
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'first_name', 'last_name', 'email', 'address', 'postal_code', 'city',
-        'transport', 'created', 'status'
+        'transport', 'created', 'status', order_pdf
     ]
 
     list_filter = ['created', 'updated']
